@@ -1,0 +1,16 @@
+name = "castor"
+version = "1.0.0"
+
+description = "Work with JSON Schema in Gleam. Supports building schemas as well as encoding decoding from json schema file."
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "crowdhailer", repo = "castor" }
+links = []
+
+[dependencies]
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+gleam_json = ">= 3.1.0 and < 4.0.0"
+non_empty_list = ">= 2.2.0 and < 3.0.0"
+oas_generator_utils = ">= 1.1.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"
