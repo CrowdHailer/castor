@@ -89,3 +89,32 @@ pub fn decode_test() {
     |> json.parse(castor.decoder())
     == Ok(castor.Boolean(False, None, None, False))
 }
+
+pub fn object_and_all_of_test() {
+  let assert Ok(schema) =
+    "{
+  \"type\": \"object\",
+  \"allOf\": [
+    {
+      \"type\": \"object\",
+      \"required\": [\"foo\"],
+      \"properties\": {
+        \"foo\": {
+          \"type\": \"string\"
+        }
+      }
+    },
+    {
+      \"$ref\": \"#/components/schemas/Additional\"
+    }
+  ]
+}"
+    |> json.parse(castor.decoder())
+  assert castor.AllOf(
+      non_empty_list.NonEmptyList(
+        castor.Inline(castor.object([castor.field("foo", castor.string())])),
+        [castor.ref("#/components/schemas/Additional")],
+      ),
+    )
+    == schema
+}

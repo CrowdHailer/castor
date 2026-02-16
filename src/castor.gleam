@@ -13,6 +13,11 @@ pub type Ref(t) {
   Inline(value: t)
 }
 
+/// Create a reference with no summary or description.
+pub fn ref(thing) {
+  Ref(thing, None, None)
+}
+
 pub fn ref_decoder(of: decode.Decoder(t)) -> decode.Decoder(Ref(t)) {
   decode.one_of(
     {
@@ -271,37 +276,49 @@ pub fn decoder() {
           |> Ok
         "object" ->
           {
-            use properties <- decode.then(properties_decoder())
-            use required <- decode.then(required_decoder())
-            use additional_properties <- decodex.optional_field(
-              "additionalProperties",
-              ref_decoder(decoder()),
+            // The type object can be used as a hint that the allof validations should all be for objects.
+            // This library returns an AllOf type, because that's more accurate.
+            // However a future version might want a special AllOfObject type that enables downstream users to manage this combined case.
+            use all_of <- decodex.optional_field(
+              "allOf",
+              non_empty_list_of_schema_decoder(),
             )
-            use max_properties <- decodex.optional_field(
-              "maxProperties",
-              decode.int,
-            )
-            // "Omitting this keyword has the same behavior as a value of 0"
-            use min_properties <- decodex.default_field(
-              "minProperties",
-              decode.int,
-              0,
-            )
-            use nullable <- decode.then(nullable_decoder)
-            use title <- decode.then(title_decoder())
-            use description <- decode.then(description_decoder())
-            use deprecated <- decode.then(deprecated_decoder())
-            decode.success(Object(
-              properties,
-              required,
-              additional_properties,
-              max_properties,
-              min_properties,
-              nullable,
-              title,
-              description,
-              deprecated,
-            ))
+            case all_of {
+              Some(schemas) -> decode.success(AllOf(schemas))
+              None -> {
+                use properties <- decode.then(properties_decoder())
+                use required <- decode.then(required_decoder())
+                use additional_properties <- decodex.optional_field(
+                  "additionalProperties",
+                  ref_decoder(decoder()),
+                )
+                use max_properties <- decodex.optional_field(
+                  "maxProperties",
+                  decode.int,
+                )
+                // "Omitting this keyword has the same behavior as a value of 0"
+                use min_properties <- decodex.default_field(
+                  "minProperties",
+                  decode.int,
+                  0,
+                )
+                use nullable <- decode.then(nullable_decoder)
+                use title <- decode.then(title_decoder())
+                use description <- decode.then(description_decoder())
+                use deprecated <- decode.then(deprecated_decoder())
+                decode.success(Object(
+                  properties,
+                  required,
+                  additional_properties,
+                  max_properties,
+                  min_properties,
+                  nullable,
+                  title,
+                  description,
+                  deprecated,
+                ))
+              }
+            }
           }
           |> Ok
         type_ -> Error("valid schema type got: " <> type_)
