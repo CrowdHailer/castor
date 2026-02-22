@@ -50,6 +50,24 @@ pub fn simple_schema_test() {
     == "{\"type\":\"boolean\",\"nullable\":false,\"deprecated\":false}"
 }
 
+pub fn float_schema_test() {
+  let decoded =
+    "{\"default\": 0.0001,\"maximum\": 1,\"minimum\": 1e-8,\"title\": \"Learning Rate\",\"type\": \"number\"}"
+    |> json.parse(castor.decoder())
+  assert Ok(castor.Number(
+      multiple_of: None,
+      maximum: Some(1.0),
+      minimum: Some(0.00000001),
+      exclusive_maximum: None,
+      exclusive_minimum: None,
+      nullable: False,
+      title: Some("Learning Rate"),
+      description: None,
+      deprecated: False,
+    ))
+    == decoded
+}
+
 pub fn list_schema_test() {
   assert castor.array(castor.Inline(castor.integer()))
     |> castor.encode

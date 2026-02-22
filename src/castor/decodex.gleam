@@ -1,4 +1,5 @@
 import gleam/dynamic/decode.{type Decoder}
+import gleam/int
 import gleam/option.{None}
 
 pub fn default_field(key, decoder, default, k) {
@@ -31,6 +32,10 @@ pub fn discriminate(
     }),
   )
   on
+}
+
+pub fn number() {
+  decode.one_of(decode.float, [decode.map(decode.int, int.to_float)])
 }
 
 pub fn any() {

@@ -54,10 +54,10 @@ pub type Schema {
   )
   Number(
     multiple_of: Option(Int),
-    maximum: Option(Int),
-    exclusive_maximum: Option(Int),
-    minimum: Option(Int),
-    exclusive_minimum: Option(Int),
+    maximum: Option(Float),
+    exclusive_maximum: Option(Float),
+    minimum: Option(Float),
+    exclusive_minimum: Option(Float),
     nullable: Bool,
     title: Option(String),
     description: Option(String),
@@ -187,15 +187,15 @@ pub fn decoder() {
         "number" ->
           {
             use multiple_of <- decodex.optional_field("multipleOf", decode.int)
-            use maximum <- decodex.optional_field("maximum", decode.int)
+            use maximum <- decodex.optional_field("maximum", decodex.number())
             use exclusive_maximum <- decodex.optional_field(
               "exclusiveMaximum",
-              decode.int,
+              decodex.number(),
             )
-            use minimum <- decodex.optional_field("minimum", decode.int)
+            use minimum <- decodex.optional_field("minimum", decodex.number())
             use exclusive_minimum <- decodex.optional_field(
               "exclusiveMinimum",
-              decode.int,
+              decodex.number(),
             )
             use nullable <- decode.then(nullable_decoder)
             use title <- decode.then(title_decoder())
@@ -566,10 +566,10 @@ pub fn encode(schema) {
       json_object([
         #("type", Some(json.string("number"))),
         #("multipleOf", option.map(number.multiple_of, json.int)),
-        #("maximum", option.map(number.maximum, json.int)),
-        #("exclusiveMaximum", option.map(number.exclusive_maximum, json.int)),
-        #("minimum", option.map(number.minimum, json.int)),
-        #("exclusiveMinimum", option.map(number.exclusive_minimum, json.int)),
+        #("maximum", option.map(number.maximum, json.float)),
+        #("exclusiveMaximum", option.map(number.exclusive_maximum, json.float)),
+        #("minimum", option.map(number.minimum, json.float)),
+        #("exclusiveMinimum", option.map(number.exclusive_minimum, json.float)),
         #("nullable", Some(json.bool(number.nullable))),
         #("title", option.map(number.title, json.string)),
         #("description", option.map(number.description, json.string)),
@@ -713,15 +713,15 @@ pub fn to_fields(schema) {
       any_object([
         #("type", Some(utils.String("number"))),
         #("multipleOf", option.map(number.multiple_of, utils.Integer)),
-        #("maximum", option.map(number.maximum, utils.Integer)),
+        #("maximum", option.map(number.maximum, utils.Number)),
         #(
           "exclusiveMaximum",
-          option.map(number.exclusive_maximum, utils.Integer),
+          option.map(number.exclusive_maximum, utils.Number),
         ),
-        #("minimum", option.map(number.minimum, utils.Integer)),
+        #("minimum", option.map(number.minimum, utils.Number)),
         #(
           "exclusiveMinimum",
-          option.map(number.exclusive_minimum, utils.Integer),
+          option.map(number.exclusive_minimum, utils.Number),
         ),
         #("nullable", Some(utils.Boolean(number.nullable))),
         #("title", option.map(number.title, utils.String)),
