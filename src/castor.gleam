@@ -665,9 +665,119 @@ pub fn encode(schema) {
   }
 }
 
+/// Encode schema with minimal optional properties.
+/// Compatible with AWS Bedrock Structured Output
+/// 
+/// See https://aws.amazon.com/blogs/machine-learning/structured-outputs-on-amazon-bedrock-schema-compliant-ai-responses/
+pub fn encode_minimal(schema) {
+  case schema {
+    Boolean(title:, description:, deprecated:, ..) ->
+      json_object([
+        #("type", Some(json.string("boolean"))),
+        #("title", option.map(title, json.string)),
+        #("description", option.map(description, json.string)),
+        #("deprecated", Some(json.bool(deprecated))),
+      ])
+    Integer(..) as int -> {
+      json_object([
+        #("type", Some(json.string("integer"))),
+        #("nullable", Some(json.bool(int.nullable))),
+        #("title", option.map(int.title, json.string)),
+        #("description", option.map(int.description, json.string)),
+        #("deprecated", Some(json.bool(int.deprecated))),
+      ])
+    }
+    Number(..) as number -> {
+      json_object([
+        #("type", Some(json.string("number"))),
+        #("title", option.map(number.title, json.string)),
+        #("description", option.map(number.description, json.string)),
+        #("deprecated", Some(json.bool(number.deprecated))),
+      ])
+    }
+    String(..) as string -> {
+      json_object([
+        #("type", Some(json.string("string"))),
+        #("Pattern", option.map(string.pattern, json.string)),
+        #("Format", option.map(string.format, json.string)),
+        #("title", option.map(string.title, json.string)),
+        #("description", option.map(string.description, json.string)),
+      ])
+    }
+    Null(..) as null -> {
+      json_object([
+        #("type", Some(json.string("null"))),
+        #("title", option.map(null.title, json.string)),
+        #("description", option.map(null.description, json.string)),
+        #("deprecated", Some(json.bool(null.deprecated))),
+      ])
+    }
+    Array(..) as array -> {
+      json_object([
+        #("type", Some(json.string("array"))),
+        #("items", Some(minimal_ref_encode(array.items))),
+        #("title", option.map(array.title, json.string)),
+        #("description", option.map(array.description, json.string)),
+      ])
+    }
+    Object(..) as object -> {
+      json_object([
+        #("type", Some(json.string("object"))),
+        #(
+          "properties",
+          Some(json.dict(object.properties, fn(x) { x }, minimal_ref_encode)),
+        ),
+        #("additionalProperties", Some(json.bool(False))),
+        #("required", Some(json.array(object.required, json.string))),
+        #("title", option.map(object.title, json.string)),
+        #("description", option.map(object.description, json.string)),
+      ])
+    }
+    AllOf(varients) -> {
+      json_object([
+        #(
+          "allOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    AnyOf(varients) -> {
+      json_object([
+        #(
+          "anyOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    OneOf(varients) -> {
+      json_object([
+        #(
+          "oneOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    Enum(non_empty_list.NonEmptyList(value, [])) ->
+      json_object([#("const", Some(utils.any_to_json(value)))])
+    Enum(values) -> {
+      let values = non_empty_list.to_list(values)
+      json_object([#("enum", Some(json.array(values, utils.any_to_json)))])
+    }
+    AlwaysPasses -> json.bool(True)
+    AlwaysFails -> json.bool(False)
+  }
+}
+
 fn ref_encode(ref) {
   case ref {
     Inline(schema) -> encode(schema)
+    Ref(reference, ..) -> json.object([#("$ref", json.string(reference))])
+  }
+}
+
+fn minimal_ref_encode(ref) {
+  case ref {
+    Inline(schema) -> encode_minimal(schema)
     Ref(reference, ..) -> json.object([#("$ref", json.string(reference))])
   }
 }
