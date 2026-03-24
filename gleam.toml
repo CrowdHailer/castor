@@ -1,5 +1,5 @@
 name = "castor"
-version = "2.0.0"
+version = "2.1.0"
 gleam = ">= 1.14.0"
 
 description = "Work with JSON Schema in Gleam. Supports building schemas as well as encoding decoding from json schema file."
