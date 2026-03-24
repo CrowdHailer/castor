@@ -1,5 +1,4 @@
-import castor
-import castor/encoders.{encode_minimal}
+import castor.{encode_minimal}
 import gleam/json
 import gleam/string
 
