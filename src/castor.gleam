@@ -733,7 +733,38 @@ pub fn encode_minimal(schema) {
         #("description", option.map(object.description, json.string)),
       ])
     }
-    _ -> json.null()
+    AllOf(varients) -> {
+      json_object([
+        #(
+          "allOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    AnyOf(varients) -> {
+      json_object([
+        #(
+          "anyOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    OneOf(varients) -> {
+      json_object([
+        #(
+          "oneOf",
+          Some(json.array(non_empty_list.to_list(varients), minimal_ref_encode)),
+        ),
+      ])
+    }
+    Enum(non_empty_list.NonEmptyList(value, [])) ->
+      json_object([#("const", Some(utils.any_to_json(value)))])
+    Enum(values) -> {
+      let values = non_empty_list.to_list(values)
+      json_object([#("enum", Some(json.array(values, utils.any_to_json)))])
+    }
+    AlwaysPasses -> json.bool(True)
+    AlwaysFails -> json.bool(False)
   }
 }
 
