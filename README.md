@@ -50,7 +50,6 @@ pub fn object_schema() {
 To add other schema information such as maximum and minimum use the schema objects directly.
 
 ```gleam
-```gleam
 import castor
 
 pub fn number_schema() {
